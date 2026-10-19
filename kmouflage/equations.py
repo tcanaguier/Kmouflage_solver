@@ -187,11 +187,11 @@ def H_conf_from_constraint(phys: Physics, phi, phi_prime, a) -> float:
     rad = (A_ ** 2 * a ** 2 * (rho_m(phys, a) + rho_r(phys, a))
            + phys.Kp(X_) * phi_prime ** 2
            - a ** 2 * A_ ** (-2) * phys.M4_tilde * (phys.K(X_) - phys.f_pot(phi))) / 3.0
-    if rad < 0:
-        raise ValueError(f"H_E^2 < 0: rad={rad:.3e}")
+    if np.any(rad < 0):
+        raise ValueError(f"H_E^2 < 0: rad={np.min(rad):.3e}")
     H_conf = phys.alpha(phi) * phi_prime + np.sqrt(rad)
-    if H_conf <= 0:
-        raise ValueError(f"H_conf={H_conf:.3e} <= 0")
+    if np.any(H_conf <= 0):
+        raise ValueError(f"H_conf={np.min(H_conf):.3e} <= 0")
     return H_conf
 
 
@@ -206,8 +206,9 @@ def phi_prime2_demixed(phys: Physics, phi, phi_prime, a, H_conf) -> float:
            + a ** 2 * A_ ** (-2) * (phys.M4_tilde * phys.f_pot_phi(phi)
                                     + av * A_ ** 4 * rho_m(phys, a)))
     den = Kp + 2.0 * X_ * Kpp
-    if not np.isfinite(den) or abs(den) < 1e-30:
-        raise RuntimeError(f"K' + 2X K'' = {den:.3e} (singular demixed KG)")
+    bad = ~np.isfinite(den) | (np.abs(den) < 1e-30)
+    if np.any(bad):
+        raise RuntimeError(f"K' + 2X K'' = {np.asarray(den)[bad].flat[0]:.3e} (singular demixed KG)")
     return -num / den
 
 
@@ -260,6 +261,48 @@ def phi_prime_from_pi_tilde(phys: Physics, phi, pi_t, a, guess=None) -> float:
     else:
         raise RuntimeError(f"phi_prime_from_pi_tilde: no bracket (pi_t={pi_t:.3e}, a={a:.3e})")
     return brentq(g, lo, hi, xtol=1e-300, rtol=1e-15)
+
+
+def phi_prime_from_pi_tilde_array(phys: Physics, phi, pi_t, a) -> np.ndarray:
+    """Array version of phi_prime_from_pi_tilde (post-processing on the whole N grid).
+    Newton on s = ln|phi'| for h(s) = ln(K' |phi'|) - ln|c|, dh/ds = (K' + 2X K'') / K' > 0:
+    nearly linear at large X (K ~ X^m), so it converges from the cold guess c / max(K'(0), 1).
+    h is increasing, so its sign gives a bracket [lo, hi] of the root; a Newton step leaving it
+    is replaced by bisection (plain Newton cycles near the inflection of an arctan K').
+    Points left unconverged go through the scalar solver (brentq fallback)."""
+    phi, pi_t, a = np.broadcast_arrays(*(np.asarray(v, dtype=float) for v in (phi, pi_t, a)))
+    c  = np.asarray(phys.A(phi), dtype=float) ** 2 * pi_t
+    pp = np.zeros_like(c)
+    idx   = np.flatnonzero(c != 0.0)
+    log_c = np.log(np.abs(c[idx]))
+    s  = log_c - np.log(max(phys.Kp(0.0), 1.0))
+    lo = np.full_like(s, -np.inf)
+    hi = np.full_like(s, np.inf)
+    for _ in range(200):
+        if idx.size == 0:
+            break
+        X_ = X(phys, phi[idx], np.exp(s), a[idx])
+        Kp = np.broadcast_to(np.asarray(phys.Kp(X_), dtype=float), X_.shape)
+        dh = (Kp + 2.0 * X_ * phys.Kpp(X_)) / Kp
+        ok = np.isfinite(dh) & (dh > 0.0) & (Kp > 0.0)
+        h  = np.log(np.where(ok, Kp, 1.0)) + s - log_c
+        hi = np.where(h > 0.0, s, hi)
+        lo = np.where(h <= 0.0, s, lo)
+        s_new = s - h / np.where(ok, dh, 1.0)
+        out = (s_new <= lo) | (s_new >= hi)
+        s_new = np.where(out & np.isfinite(lo) & np.isfinite(hi), 0.5 * (lo + hi), s_new)
+        s_new = np.where(out & ~np.isfinite(lo), 0.5 * (s + hi) - 1.0, s_new)   # step down past hi
+        s_new = np.where(out & ~np.isfinite(hi), 0.5 * (s + lo) + 1.0, s_new)   # step up past lo
+        tol  = 1e-14 * np.maximum(np.abs(s_new), 1.0)
+        done = ok & ((np.abs(s_new - s) <= tol) | (hi - lo <= tol))
+        pp[idx[done]] = np.copysign(np.exp(s_new[done]), c[idx[done]])
+        for i in idx[~ok]:
+            pp[i] = phi_prime_from_pi_tilde(phys, phi[i], pi_t[i], a[i])
+        keep = ok & ~done
+        idx, s, log_c, lo, hi = idx[keep], s_new[keep], log_c[keep], lo[keep], hi[keep]
+    for i in idx:
+        pp[i] = phi_prime_from_pi_tilde(phys, phi[i], pi_t[i], a[i])
+    return pp
 
 
 def dpi_tilde_dN(phys: Physics, phi, pi_t, a, H_conf) -> float:

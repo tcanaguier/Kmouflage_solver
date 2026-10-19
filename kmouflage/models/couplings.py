@@ -30,7 +30,7 @@ def make_gaussian_coupling(beta: float, gamma: float) -> ConformalCoupling:
     return ConformalCoupling(
         name      = f"gaussian (β={beta}, γ={gamma})",
         A         = lambda phi: np.exp(beta * phi + 0.5 * gamma * phi**2),
-        alpha     = lambda phi: float(beta + gamma * phi),
+        alpha     = lambda phi: beta + gamma * phi,
         alpha_phi = lambda phi: float(gamma),
         params    = {"beta": beta, "gamma": gamma},
     )

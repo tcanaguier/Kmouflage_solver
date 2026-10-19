@@ -180,16 +180,19 @@ class KMouflageBackground:
         N_arr         = sol.t
         phi_arr       = sol.y[0]
         a_arr         = np.exp(N_arr)
-        self._pp_guess = None
-        phi_prime_arr = np.array([self._phi_prime(ph, y2, a)
-                                  for ph, y2, a in zip(phi_arr, sol.y[1], a_arr)])
+        if self.variables == "phi_prime":
+            phi_prime_arr = sol.y[1].copy()
+        else:
+            phi_prime_arr = eq.phi_prime_from_pi_tilde_array(phys, phi_arr, sol.y[1], a_arr)
+
+        def _full(x):   # model functions may return a scalar (constant A, f, alpha...)
+            return np.broadcast_to(np.asarray(x, dtype=float), N_arr.shape).copy()
 
         def _interp(arr):
             return interp1d(N_arr, arr, kind='linear',
                             bounds_error=False, fill_value='extrapolate')
 
-        E_conf_arr = np.array([eq.H_conf_from_constraint(phys, ph, pp, a)
-                               for ph, pp, a in zip(phi_arr, phi_prime_arr, a_arr)])
+        E_conf_arr = eq.H_conf_from_constraint(phys, phi_arr, phi_prime_arr, a_arr)
         H_conf_arr = E_conf_arr
         u_arr      = phi_prime_arr / H_conf_arr
 
@@ -200,9 +203,9 @@ class KMouflageBackground:
 
         H_arr = eq.H(E_conf_arr, a_arr)
 
-        A_arr  = np.asarray([phys.A(ph) for ph in phi_arr], dtype=float)
-        av_arr = np.array([phys.alpha(ph)     for ph in phi_arr])
-        ap_arr = np.array([phys.alpha_phi(ph) for ph in phi_arr])
+        A_arr  = _full(phys.A(phi_arr))
+        av_arr = _full(phys.alpha(phi_arr))
+        ap_arr = _full(phys.alpha_phi(phi_arr))
 
         F_arr       = A_arr**(-2)
         F_phi_arr   = -2.0 * av_arr * F_arr
@@ -211,22 +214,20 @@ class KMouflageBackground:
 
         chi_arr   = phi_prime_arr**2 / (2.0 * self.M4_tilde * a_arr**2)
         X_arr     = A_arr**2 * chi_arr
-        Kp_arr    = phys.Kp(X_arr)
-        Kpp_arr   = phys.Kpp(X_arr)
+        Kp_arr    = _full(phys.Kp(X_arr))
+        Kpp_arr   = _full(phys.Kpp(X_arr))
 
         Z_arr     = A_arr**(-2) * Kp_arr - 6.0 * F_arr * av_arr**2
         Z_eff_arr = A_arr**(-2) * (Kp_arr + 2.0 * X_arr * Kpp_arr) - 6.0 * F_arr * av_arr**2
 
-        phi_prime2_arr   = np.empty_like(N_arr)
-        H_conf_prime_arr = np.empty_like(N_arr)
-        for i, (ph, pp, a, Hc) in enumerate(zip(phi_arr, phi_prime_arr, a_arr, H_conf_arr)):
-            phi_prime2_arr[i]   = eq.phi_prime2_demixed(phys, ph, pp, a, Hc)
-            H_conf_prime_arr[i] = eq.H_conf_prime_from_F2(phys, ph, pp, phi_prime2_arr[i], a, Hc)
+        phi_prime2_arr   = _full(eq.phi_prime2_demixed(phys, phi_arr, phi_prime_arr, a_arr, H_conf_arr))
+        H_conf_prime_arr = _full(eq.H_conf_prime_from_F2(phys, phi_arr, phi_prime_arr, phi_prime2_arr,
+                                                         a_arr, H_conf_arr))
 
         F_prime2_arr = F_phi2_arr * phi_prime_arr**2 + F_phi_arr * phi_prime2_arr
 
         A4_arr      = A_arr**(-4)
-        f_arr       = np.asarray([phys.f_pot(ph) for ph in phi_arr], dtype=float)
+        f_arr       = _full(phys.f_pot(phi_arr))
         rho_phi_arr = ((Z_arr + 3.0 * F_arr * av_arr**2) * phi_prime_arr**2 / a_arr**2
                        - A4_arr * self.M4_tilde * (phys.K(X_arr) - f_arr))
         p_phi_arr   = (- 3.0 * F_arr * av_arr**2 * phi_prime_arr**2 / a_arr**2
