@@ -1,7 +1,7 @@
-from .solver import CosmologicalParams, InitialConditions, KinessenceBackground
+from .solver import CosmologicalParams, InitialConditions, KMouflageBackground
 from .calibrate_M4 import calibrate_M4_tilde
 from .verify import verify
-from .growth import GrowthSolver, KinessenceGrowth, LCDMGrowth
+from .growth import GrowthSolver, KMouflageGrowth, LCDMGrowth
 from .run import (
     run_background, save_table, save_pysco_table, default_table_name,
     summary_table, print_summary_table, make_lcdm_reference,
@@ -16,9 +16,9 @@ from .models.couplings import (
 from .models.potential import Potential, make_constant_potential, make_exponential_potential
 
 __all__ = [
-    "CosmologicalParams", "InitialConditions", "KinessenceBackground",
+    "CosmologicalParams", "InitialConditions", "KMouflageBackground",
     "calibrate_M4_tilde", "verify",
-    "GrowthSolver", "KinessenceGrowth", "LCDMGrowth",
+    "GrowthSolver", "KMouflageGrowth", "LCDMGrowth",
     "run_background", "save_table", "save_pysco_table", "default_table_name",
     "summary_table", "print_summary_table", "make_lcdm_reference",
     "KModel", "make_powerlaw_K", "make_arctan_K", "make_LambdaCDM_K",

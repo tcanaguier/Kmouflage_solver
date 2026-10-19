@@ -18,7 +18,7 @@ env/
 /runs/
 examples/runs/
 
-# Kinessence article project, not part of the kinessence package
+# Kinessence article project, not part of the kmouflage package
 /Kinessence/
 
 # old solver, kept locally

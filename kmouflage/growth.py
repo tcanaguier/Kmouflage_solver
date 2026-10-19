@@ -170,9 +170,9 @@ class LCDMGrowth(GrowthSolver):
         print("─────────────────────────────────────────────────────────────\n")
 
 
-class KinessenceGrowth(GrowthSolver):
+class KMouflageGrowth(GrowthSolver):
     """
-    Kinessence growth solver. 
+    K-mouflage growth solver (also valid with a Kinessence potential).
     The background starts at z_ini ~ 1e5 (RDE); the growth ODE must start
     well into MDE for fgrowth=1 to be a valid initial condition, hence
     N_MDE = N_eq + N_offset (N_offset e-folds after matter-radiation
@@ -237,7 +237,7 @@ class KinessenceGrowth(GrowthSolver):
 
         if verbose:
             print(
-                f"[Kinessence] f(z=0)={f[-1]:.5f} | D+(z=0)={Dp[-1]:.5f} | "
+                f"[K-mouflage] f(z=0)={f[-1]:.5f} | D+(z=0)={Dp[-1]:.5f} | "
                 f"Ω_m(z=0)={Omega_m_arr[-1]:.5f} | μ_K(z=0)={mu_K_arr[-1]:.5f} | "
                 f"γ(z=0)={gamma_arr[-1]:.5f}     | f(N_ini) ={f[0]}"
             )
@@ -258,7 +258,7 @@ class KinessenceGrowth(GrowthSolver):
         i1 = np.argmin(np.abs(r["z"] - 1.0))
         i2 = np.argmin(np.abs(r["z"] - 0.5))
 
-        print("\n── Kinessence Growth ─────────────────────────────────────────────")
+        print("\n── K-mouflage Growth ────────────────────────────────────────────")
         print(f"  N_ini (MDE) = {self.N_ini:.3f}  "
               f"(z_ini = {1.0/np.exp(self.N_ini)-1.0:.0f}, "
               f"{self.N_ini - self.N_eq:.1f} e-folds après z_eq)")

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .solver import KinessenceBackground, CosmologicalParams
+from .solver import KMouflageBackground, CosmologicalParams
 
 # enough to rebuild every other quantity later, so always saved
 MANDATORY_FIELDS = ["a", "phi", "phi_prime"]
@@ -26,9 +26,9 @@ DEFAULT_RUNS_DIR = os.path.join(
 
 
 def run_background(model, coupling, potential=None, cosmo=None, ic=None,
-                    verbose: bool = False, **kwargs) -> KinessenceBackground:
-    """Build and run a KinessenceBackground."""
-    bg = KinessenceBackground(model=model, coupling=coupling, potential=potential,
+                    verbose: bool = False, **kwargs) -> KMouflageBackground:
+    """Build and run a KMouflageBackground."""
+    bg = KMouflageBackground(model=model, coupling=coupling, potential=potential,
                               cosmo=cosmo, ic=ic, **kwargs)
     bg.run(verbose=verbose)
     return bg
@@ -39,15 +39,15 @@ def _base_name(obj) -> str:
     return re.sub(r"[^0-9A-Za-z]+", "_", obj.name.split("(", 1)[0].strip()).strip("_")
 
 
-def default_table_name(bg: KinessenceBackground) -> str:
+def default_table_name(bg: KMouflageBackground) -> str:
     """Suggests a name from the model's real params, e.g. "..._beta-0.1_..."."""
     def tag(obj):
         return _base_name(obj) + "".join(f"_{k}-{v}" for k, v in obj.params.items())
-    return (f"kinessence_table_{tag(bg.coupling)}_{tag(bg.model)}_{tag(bg.potential)}"
+    return (f"kmouflage_table_{tag(bg.coupling)}_{tag(bg.model)}_{tag(bg.potential)}"
             f"_M4-{bg.M4_tilde:g}")
 
 
-def save_table(bg: KinessenceBackground, name: str = None, fields=None,
+def save_table(bg: KMouflageBackground, name: str = None, fields=None,
                outdir: str = DEFAULT_RUNS_DIR) -> str:
     """Save an already-run bg as one CSV (run info in a commented header, then the data). Returns the path."""
     if not hasattr(bg, "_N"):
@@ -79,7 +79,7 @@ def save_table(bg: KinessenceBackground, name: str = None, fields=None,
 PYSCO_COLUMNS = "aexp E mu_K Omega_m Omega_r py_DE"
 
 
-def save_pysco_table(bg: KinessenceBackground, path: str = None, aexp_min: float = 1e-8,
+def save_pysco_table(bg: KMouflageBackground, path: str = None, aexp_min: float = 1e-8,
                      n_points: int = 200_000, header_extra=None, overwrite: bool = False,
                      fmt: str = "%.10e") -> str:
     """Write the table pysco reads for theory = kmouflage. Returns the path.

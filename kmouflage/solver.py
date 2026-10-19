@@ -31,7 +31,7 @@ class InitialConditions:
     phi_ini: float = 0.0
 
 
-class KinessenceBackground:
+class KMouflageBackground:
     def __init__(
         self,
         model:         KModel,

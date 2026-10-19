@@ -1,5 +1,5 @@
 """
-Checks on a Kinessence run.
+Checks on a K-mouflage (or Kinessence) run.
 
 verify(bg) runs everything on a background that has already run:
   numerical accuracy (numerical derivatives vs the equations, Friedmann, closure),
@@ -17,7 +17,7 @@ from typing import Optional
 import numpy as np
 from scipy.optimize import brentq
 
-from .solver import KinessenceBackground
+from .solver import KMouflageBackground
 from .models.k_functions import KModel
 from .models.couplings import ConformalCoupling
 
@@ -172,7 +172,7 @@ def verify_screening(
 
 # Full check of a run 
 
-def verify(bg: KinessenceBackground) -> Report:
+def verify(bg: KMouflageBackground) -> Report:
     """Numerical accuracy, stability and Solar System checks on a background that has run."""
     if not hasattr(bg, "_N"):
         raise RuntimeError("Call bg.run() before verify(bg).")

@@ -1,20 +1,21 @@
-# Kinessence Background
+# K-mouflage Background
 
-A small Python solver for Kinessence models, a modified gravity theory built
-on a scalar field with a non standard kinetic term K(X), a coupling A(φ) to
-matter and a potential f(φ). It computes how the universe expands (Hubble
-rate, densities, equations of state) and how structures grow, and it writes
-the tables used by the N-body code pysco.
+A small Python solver for K-mouflage models, a modified gravity theory built
+on a scalar field with a non standard kinetic term K(X) and a coupling A(φ) to
+matter, screened by the K-mouflage mechanism. The solver also accepts a
+potential f(φ), which extends it to Kinessence models. It computes how the
+universe expands (Hubble rate, densities, equations of state) and how
+structures grow, and it writes the tables used by the N-body code pysco.
 
-## Kinessence and K-mouflage
+## K-mouflage and its Kinessence extension
 
 The scalar field Lagrangian is
 
     A⁻⁴ M⁴ [ K(X) − f(φ) ]
 
-K-mouflage is the special case f = 1. This is what you get when you don't
-give a potential, so by default the solver runs K-mouflage. Giving a
-potential f(φ) turns it into a Kinessence model.
+K-mouflage is the case f = 1. This is what you get when you don't give a
+potential, so by default the solver runs K-mouflage. Giving a potential f(φ)
+extends it to a Kinessence model.
 
 Write K(X) with K(0) = 0, for example K(X) = X + K0 X³. The usual K-mouflage
 papers write K(X) = −1 + X + ..., and that −1 is exactly our f = 1. Don't add
@@ -22,14 +23,14 @@ it to K yourself, or you would count the vacuum energy twice.
 
 ## Install
 
-Clone the repo and import `kinessence` from it. The package needs `numpy` and
+Clone the repo and import `kmouflage` from it. The package needs `numpy` and
 `scipy`, the notebooks also use `matplotlib`.
 
 ## Quick example
 
 ```python
-from kinessence import (
-    KinessenceBackground, CosmologicalParams,
+from kmouflage import (
+    KMouflageBackground, CosmologicalParams,
     make_powerlaw_K, make_exponential_coupling,
 )
 
@@ -37,7 +38,7 @@ model    = make_powerlaw_K(K0=1, m=3)
 coupling = make_exponential_coupling(beta=0.1)
 cosmo    = CosmologicalParams(omega_m=0.1430, omega_r=4.15e-5, M4_tilde=1.0)
 
-bg = KinessenceBackground(model=model, coupling=coupling, cosmo=cosmo)
+bg = KMouflageBackground(model=model, coupling=coupling, cosmo=cosmo)
 bg.run()
 
 N = 0.0          # N = ln(a), N = 0 is today
@@ -68,7 +69,7 @@ is H divided by 100 km/s/Mpc, and today it equals h. For plots, use
 stays frozen and Λ = M4_tilde:
 
 ```python
-from kinessence import run_background, make_LambdaCDM_K, make_LambdaCDM_coupling
+from kmouflage import run_background, make_LambdaCDM_K, make_LambdaCDM_coupling
 
 bg_lcdm = run_background(make_LambdaCDM_K(), make_LambdaCDM_coupling(), cosmo=cosmo)
 ```
@@ -86,7 +87,7 @@ has to be inverted. The initial momentum is computed analytically deep in the
 radiation era, so the run can start as early as you want (`z_ini`, 1e5 by
 default).
 
-`KinessenceGrowth(bg)` then gives the linear growth rate f and the growth
+`KMouflageGrowth(bg)` then gives the linear growth rate f and the growth
 factor D+.
 
 ## Saving a run
@@ -100,10 +101,10 @@ mu_K, Omega_m, Omega_r and py_DE, from a = 1e-8 to today. The background must
 start early enough for that, so run it with `z_ini = 1e8`.
 
 ```python
-from kinessence import InitialConditions, run_background, save_pysco_table
+from kmouflage import InitialConditions, run_background, save_pysco_table
 
 bg = run_background(model, coupling, cosmo=cosmo, ic=InitialConditions(z_ini=1e8))
-save_pysco_table(bg, "kinessence_table.txt")
+save_pysco_table(bg, "kmouflage_table.txt")
 ```
 
 ## Papers

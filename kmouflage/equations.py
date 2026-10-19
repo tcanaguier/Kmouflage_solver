@@ -1,5 +1,6 @@
 """
-Kinessence equations of motion (background level).
+K-mouflage equations of motion (background level), with the optional
+Kinessence potential f(phi).
 
 Every function here is stateless: it takes a ``Physics`` context (model +
 coupling + potential + cosmological constants) plus the current field state
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 @dataclass(frozen=True)
 class Physics:
     """Bundles the model, coupling, potential and cosmological constants
-    needed to evaluate the Kinessence equations of motion."""
+    needed to evaluate the K-mouflage (or Kinessence) equations of motion."""
     model:        "KModel"
     coupling:     "ConformalCoupling"
     potential:    "Potential"
